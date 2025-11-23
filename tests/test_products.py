@@ -2,7 +2,7 @@ import pytest
 from src.products import Product, Category
 
 
-# ТЕСТЫ ДЛЯ КЛАССА Product
+# Тестирование для Product
 
 @pytest.mark.parametrize(
     "name, description, price, quantity",
@@ -25,7 +25,7 @@ def test_product_initialization(name, description, price, quantity):
     assert product.quantity == quantity
 
 
-# ТЕСТЫ ДЛЯ КЛАССА Category
+# Тестирование для Category
 
 @pytest.mark.parametrize(
     "name, description, product_count_in_list",
@@ -51,7 +51,7 @@ def test_category_initialization(name, description, product_count_in_list):
     assert category.products == products
 
 
-# ТЕСТЫ СЧЁТЧИКОВ С ИСПОЛЬЗОВАНИЕМ patch
+# тестирование счетчиков с использованием patch
 
 def test_category_and_product_count_incremented_correctly():
     """Проверяет, что счётчики category_count
