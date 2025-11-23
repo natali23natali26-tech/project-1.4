@@ -12,7 +12,10 @@ class Product:
         quantity (int): Количество товара в наличии (в штуках).
     """
 
-    def __init__(self, name: str, description: str, price: float, quantity: int) -> None:
+    def __init__(self, name: str,
+                 description: str,
+                 price: float,
+                 quantity: int) -> None:
         self.name = name
         self.description = description
         self.price = price
@@ -36,7 +39,9 @@ class Category:
     category_count = 0
     product_count = 0
 
-    def __init__(self, name: str, description: str, products: List[Product]) -> None:
+    def __init__(self, name: str,
+                 description: str,
+                 products: List[Product]) -> None:
         self.name = name
         self.description = description
         self.products = products
