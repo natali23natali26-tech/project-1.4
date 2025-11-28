@@ -19,12 +19,15 @@ class Category:
     category_count = 0
     product_count = 0
 
+    # Явная аннотация типа для приватного атрибута
+    __products: list[Product]
+
     def __init__(self, name: str,
                  description: str,
                  products: List[Product]) -> None:
         self.name = name
         self.description = description
-        self.__products = []  # Приватный список
+        self.__products = []  # Теперь тип известен
 
         Category.category_count += 1
 
@@ -41,9 +44,27 @@ class Category:
         Category.product_count += 1
 
     @property
-    def products(self) -> List[Product]:
-        """Геттер: возвращает список товаров (только для чтения)."""
-        return self.__products
+    def products(self) -> str:
+        """
+        Геттер: возвращает строковое представление всех товаров в категории.
+        Каждый товар — в формате:
+        Название продукта, 80 руб. Остаток: 15 шт.
+
+        Возвращает:
+            str: Многострочная строка с информацией о товарах.
+                 Если товаров нет — пустая строка.
+        """
+        if not self.__products:
+            return ""
+
+        product_lines = [
+            (f"{product.name}, "
+             f"{int(product.price)} руб. "
+             f"Остаток: {product.quantity} шт.")
+            for product in self.__products
+        ]
+
+        return "\n".join(product_lines)
 
     def __repr__(self) -> str:
         return (f"Category(name='{self.name}', "
