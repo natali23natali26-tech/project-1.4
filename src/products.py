@@ -25,7 +25,7 @@ class Product:
 
     @property
     def price(self) -> float:
-        """Геттер для цены."""
+        """Геттер для цены. """
         return self.__price
 
     @price.setter

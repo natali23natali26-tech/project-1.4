@@ -19,7 +19,6 @@ class Category:
     category_count = 0
     product_count = 0
 
-    # Явная аннотация типа для приватного атрибута
     __products: list[Product]
 
     def __init__(self, name: str,
