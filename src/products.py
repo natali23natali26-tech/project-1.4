@@ -20,12 +20,12 @@ class Product:
         self.description = description
         self.quantity = quantity
         self.__price = 0.0
-        # Используем сеттер для валидации
-        self.price = price  # вызовет сеттер
+        # используем сеттер для валидации
+        self.price = price
 
     @property
     def price(self) -> float:
-        """Геттер для цены. """
+        """Геттер для цены."""
         return self.__price
 
     @price.setter
@@ -35,6 +35,12 @@ class Product:
             print("Цена не должна быть нулевая или отрицательная")
         else:
             self.__price = value
+
+    def __str__(self) -> str:
+        """Строковое отображение продукта:
+        'Название, X руб. Остаток: Y шт.'"""
+        return (f"{self.name}, {int(self.price)} руб. "
+                f"Остаток: {self.quantity} шт.")
 
     def __repr__(self) -> str:
         return (f"Product(name='{self.name}', "
@@ -61,3 +67,20 @@ class Product:
                     return existing_product
 
         return cls(name, description, price, quantity)
+
+
+    def __add__(self, other: "Product") -> float:
+        """
+        Складывает два продукта: возвращает общую стоимость их запасов.
+        Формула: (цена × количество) одного товара + (цена × количество) другого.
+
+        Пример:
+            a: цена 100, количество 10 → 1000
+            b: цена 200, количество 2 → 400
+            a + b → 1400.0
+
+        Проверяет тип: можно складывать только с другим Product.
+        """
+        if not isinstance(other, Product):
+            raise TypeError("Складывать можно только продукты (Product).")
+        return (self.price * self.quantity) + (other.price * other.quantity)
