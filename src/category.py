@@ -1,4 +1,3 @@
-# src/category.py
 from typing import List
 from src.products import Product
 

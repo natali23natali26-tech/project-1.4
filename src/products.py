@@ -49,10 +49,14 @@ class Product:
 
     @classmethod
     def new_product(
-        cls,
-        product_data: Dict[str, Any],
-        products_list: Optional[List["Product"]] = None,
+            cls,
+            product_data: Dict[str, Any],
+            products_list: Optional[List["Product"]] = None,
     ) -> "Product":
+        """
+        Создаёт или обновляет продукт.
+        Если products_list передан, добавляет новый продукт в этот список.
+        """
         name = product_data["name"]
         description = product_data["description"]
         price = product_data["price"]
@@ -64,23 +68,24 @@ class Product:
                     existing_product.quantity += quantity
                     if price > existing_product.price:
                         existing_product.price = price
-                    return existing_product
+                    return existing_product  # Обновляем существующий
 
+            # Если не нашли — создаём новый
+            new_product = cls(name, description, price, quantity)
+            products_list.append(new_product)  # Добавляем в список!
+            return new_product
+
+        # Если products_list не передан — просто создаём
         return cls(name, description, price, quantity)
 
-
     def __add__(self, other: "Product") -> float:
-        """
-        Складывает два продукта: возвращает общую стоимость их запасов.
-        Формула: (цена × количество) одного товара + (цена × количество) другого.
-
-        Пример:
-            a: цена 100, количество 10 → 1000
-            b: цена 200, количество 2 → 400
-            a + b → 1400.0
-
-        Проверяет тип: можно складывать только с другим Product.
-        """
+        """Складывает два продукта по стоимости запасов."""
         if not isinstance(other, Product):
             raise TypeError("Складывать можно только продукты (Product).")
         return (self.price * self.quantity) + (other.price * other.quantity)
+
+    def __radd__(self, other: float) -> float:
+        """Поддержка sum(): позволяет складывать число + продукт."""
+        if isinstance(other, (int, float)):
+            return other + (self.price * self.quantity)
+        return NotImplemented
