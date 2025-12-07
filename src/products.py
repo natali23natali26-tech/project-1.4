@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List, Optional
 
 
 class Product:
@@ -8,8 +8,8 @@ class Product:
     Атрибуты:
         name (str): Название товара.
         description (str): Описание товара.
-        price (float): Цена товара в рублях (может включать копейки).
-        quantity (int): Количество товара в наличии (в штуках).
+        __price (float): Приватная цена товара.
+        quantity (int): Количество товара в наличии.
     """
 
     def __init__(self, name: str,
@@ -18,34 +18,46 @@ class Product:
                  quantity: int) -> None:
         self.name = name
         self.description = description
-        self.price = price
         self.quantity = quantity
+        self.__price = 0.0
+        # Используем сеттер для валидации
+        self.price = price  # вызовет сеттер
 
+    @property
+    def price(self) -> float:
+        """Геттер для цены. """
+        return self.__price
 
-class Category:
-    """
-    Класс, представляющий категорию товаров.
+    @price.setter
+    def price(self, value: float) -> None:
+        """Сеттер для цены с проверкой."""
+        if value <= 0:
+            print("Цена не должна быть нулевая или отрицательная")
+        else:
+            self.__price = value
 
-    Атрибуты экземпляра:
-        name (str): Название категории.
-        description (str): Описание категории.
-        products (List[Product]): Список товаров категории.
+    def __repr__(self) -> str:
+        return (f"Product(name='{self.name}', "
+                f"price={self.price}, "
+                f"quantity={self.quantity})")
 
-    Атрибуты класса:
-        category_count (int): Общее количество созданных категорий.
-        product_count (int): Общее количество товаров во всех категориях.
-    """
+    @classmethod
+    def new_product(
+        cls,
+        product_data: Dict[str, Any],
+        products_list: Optional[List["Product"]] = None,
+    ) -> "Product":
+        name = product_data["name"]
+        description = product_data["description"]
+        price = product_data["price"]
+        quantity = product_data["quantity"]
 
-    category_count = 0
-    product_count = 0
+        if products_list:
+            for existing_product in products_list:
+                if existing_product.name == name:
+                    existing_product.quantity += quantity
+                    if price > existing_product.price:
+                        existing_product.price = price
+                    return existing_product
 
-    def __init__(self, name: str,
-                 description: str,
-                 products: List[Product]) -> None:
-        self.name = name
-        self.description = description
-        self.products = products
-
-        # Увеличиваем счётчики при создании новой категории
-        Category.category_count += 1
-        Category.product_count += len(products)
+        return cls(name, description, price, quantity)
