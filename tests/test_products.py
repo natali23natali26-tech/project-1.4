@@ -1,7 +1,7 @@
 import pytest
 from src.products import Product
 from src.category import Category
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 
 # === ТЕСТЫ ДЛЯ Product ===
@@ -38,7 +38,9 @@ def test_product_price_setter_invalid_values(initial_price, invalid_price):
 
     with patch("builtins.print") as mock_print:
         product.price = invalid_price
-        mock_print.assert_called_once_with("Цена не должна быть нулевая или отрицательная")
+        mock_print.assert_called_once_with(
+            "Цена не должна быть нулевая или отрицательная"
+        )
         assert product.price == initial_price  # цена не изменилась
 
 
@@ -71,10 +73,18 @@ def test_product_repr_representation():
         (1000, 1, 500, 2, 2000),
     ]
 )
-def test_product_add_method(price_a, quantity_a, price_b, quantity_b, expected_total):
+def test_product_add_method(price_a,
+                            quantity_a,
+                            price_b,
+                            quantity_b,
+                            expected_total):
     """Проверяет, что __add__ корректно считает общую стоимость запасов."""
-    a = Product("A", "Описание", price_a, quantity_a)
-    b = Product("B", "Описание", price_b, quantity_b)
+    a = Product("A",
+                "Описание",
+                price_a, quantity_a)
+    b = Product("B",
+                "Описание",
+                price_b, quantity_b)
 
     total = a + b
     assert total == expected_total
@@ -83,24 +93,18 @@ def test_product_add_method(price_a, quantity_a, price_b, quantity_b, expected_t
 def test_product_radd_for_sum():
     """Проверяет, что sum() работает с продуктами."""
     products = [
-        Product("A", "Описание", 100, 2),  # 200
-        Product("B", "Описание", 50, 4),   # 200
-        Product("C", "Описание", 30, 10),  # 300
+        Product("A",
+                "Описание",
+                100, 2),  # 200
+        Product("B",
+                "Описание",
+                50, 4),   # 200
+        Product("C",
+                "Описание",
+                30, 10),  # 300
     ]
-
-    total = sum(products)  # 0 + A → A.__radd__(0), затем A + B → B.__radd__(A), и т.д.
-    assert total == 700
-
-
-def test_product_radd_for_sum():
-    """Проверяет, что sum() работает с продуктами."""
-    products = [
-        Product("A", "Описание", 100, 2),  # 200
-        Product("B", "Описание", 50, 4),   # 200
-        Product("C", "Описание", 30, 10),  # 300
-    ]
-
-    total = sum(products)  # требует __radd__
+    # Требует __radd__: 0 + product → вызывает product.__radd__(0)
+    total = sum(products)
     assert total == 700
 
 
@@ -114,10 +118,13 @@ def test_product_radd_for_sum():
         ("Пустая категория", "Нет товаров", 0),
     ]
 )
-def test_category_initialization(cat_name, cat_description, product_count_in_list):
+def test_category_initialization(cat_name, cat_description,
+                                 product_count_in_list):
     """Проверяет, что объект Category корректно инициализируется."""
     products = [
-        Product(f"Товар_{i}", f"Описание_{i}", 1000.0, 1)
+        Product(f"Товар_{i}",
+                f"Описание_{i}",
+                1000.0, 1)
         for i in range(product_count_in_list)
     ]
 
@@ -135,9 +142,15 @@ def test_category_initialization(cat_name, cat_description, product_count_in_lis
 
 def test_category_str_representation():
     """Проверяет строковое представление категории."""
-    product1 = Product("Телефон", "Смартфон", 20000.0, 5)
-    product2 = Product("Ноутбук", "Игровой", 80000.0, 2)
-    category = Category("Электроника", "Цифровые устройства", [product1, product2])
+    product1 = Product("Телефон",
+                       "Смартфон",
+                       20000.0, 5)
+    product2 = Product("Ноутбук",
+                       "Игровой",
+                       80000.0, 2)
+    category = Category("Электроника",
+                        "Цифровые устройства",
+                        [product1, product2])
 
     expected = "Электроника, количество продуктов: 7 шт."
     assert str(category) == expected
@@ -145,17 +158,27 @@ def test_category_str_representation():
 
 def test_category_repr_representation():
     """Проверяет repr-представление категории."""
-    products = [Product("A", "Описание", 100, 1), Product("B", "Описание", 200, 1)]
-    category = Category("Категория", "Описание", products)
+    products = [Product("A", "Описание",
+                        100, 1), Product("B",
+                                         "Описание",
+                                         200, 1)]
+    category = Category("Категория",
+                        "Описание", products)
     expected = "Category(name='Категория', products_count=2)"
     assert repr(category) == expected
 
 
 def test_category_products_property():
     """Проверяет, что геттер products использует str(product)."""
-    product1 = Product("Телефон", "Смартфон", 20000.5, 5)
-    product2 = Product("Ноутбук", "Игровой", 80000.0, 1)
-    category = Category("Электроника", "Цифровые устройства", [product1, product2])
+    product1 = Product("Телефон",
+                       "Смартфон",
+                       20000.5, 5)
+    product2 = Product("Ноутбук",
+                       "Игровой",
+                       80000.0, 1)
+    category = Category("Электроника",
+                        "Цифровые устройства",
+                        [product1, product2])
 
     expected = (
         "Телефон, 20000 руб. Остаток: 5 шт.\n"
@@ -172,19 +195,31 @@ def test_category_and_product_count_incremented_correctly():
     assert Category.category_count == 0
     assert Category.product_count == 0
 
-    product1 = Product("P1", "Desc", 1000.0, 5)
-    product2 = Product("P2", "Desc", 2000.0, 3)
-    product3 = Product("P3", "Desc", 1500.0, 7)
+    product1 = Product("P1",
+                       "Desc",
+                       1000.0, 5)
+    product2 = Product("P2",
+                       "Desc",
+                       2000.0, 3)
+    product3 = Product("P3",
+                       "Desc",
+                       1500.0, 7)
 
-    category1 = Category("Кат1", "Описание", [product1, product2])
-    category2 = Category("Кат2", "Описание", [product3])
+    Category("Кат1", "Описание",
+             [product1, product2])
+    Category("Кат2", "Описание",
+             [product3])
 
     assert Category.category_count == 2
     assert Category.product_count == 3
 
+
 def test_new_product_creates_and_updates():
-    """Проверяет, что new_product создаёт новый товар или обновляет существующий."""
-    existing_product = Product("Телефон", "Смартфон", 20000.0, 5)
+    """Проверяет, что new_product создаёт
+    новый товар или обновляет существующий."""
+    existing_product = Product("Телефон",
+                               "Смартфон",
+                               20000.0, 5)
     products = [existing_product]
 
     # Обновление существующего
@@ -209,7 +244,7 @@ def test_new_product_creates_and_updates():
     result2 = Product.new_product(new_data2, products)
     assert result2.name == "Часы"
     assert result2.quantity == 2
-    assert len(products) == 2  # ✅ Теперь пройдёт
+    assert len(products) == 2
 
     # Проверим, что сам объект добавлен
     assert result2 in products
