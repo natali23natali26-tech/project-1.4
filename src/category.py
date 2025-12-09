@@ -5,65 +5,36 @@ from src.products import Product
 class Category:
     """
     Класс, представляющий категорию товаров.
-
-    Атрибуты экземпляра:
-        name (str): Название категории.
-        description (str): Описание категории.
-        __products (List[Product]): Приватный список товаров категории.
-
-    Атрибуты класса:
-        category_count (int): Общее количество созданных категорий.
-        product_count (int): Общее количество товаров во всех категориях.
     """
 
-    category_count = 0
-    product_count = 0
+    category_count: int = 0
+    product_count: int = 0
 
-    __products: list[Product]
-
-    def __init__(self, name: str,
-                 description: str,
+    def __init__(self, name: str, description: str,
                  products: List[Product]) -> None:
         self.name = name
         self.description = description
-        self.__products = []  # Теперь тип известен
+        self.__products: List[Product] = []
 
         Category.category_count += 1
 
-        # Добавляем товары через add_product
         for product in products:
             self.add_product(product)
 
     def add_product(self, product: Product) -> None:
-        """
-        Добавляет товар в приватный список __products.
-        Увеличивает счётчик product_count.
-        """
+        if not isinstance(product, Product):
+            raise TypeError(f"Можно добавлять только товары (Product). "
+                            f"Получен тип: {type(product).__name__}")
         self.__products.append(product)
         Category.product_count += 1
 
     @property
     def products(self) -> str:
-        """
-        Геттер: возвращает строковое представление всех товаров в категории.
-        Каждый товар — в формате:
-        Название продукта, 80 руб. Остаток: 15 шт.
+        return "\n".join(str(product) for product in self.__products)
 
-        Возвращает:
-            str: Многострочная строка с информацией о товарах.
-                 Если товаров нет — пустая строка.
-        """
-        if not self.__products:
-            return ""
-
-        product_lines = [
-            (f"{product.name}, "
-             f"{int(product.price)} руб. "
-             f"Остаток: {product.quantity} шт.")
-            for product in self.__products
-        ]
-
-        return "\n".join(product_lines)
+    def __str__(self) -> str:
+        total_quantity = sum(product.quantity for product in self.__products)
+        return f"{self.name}, количество продуктов: {total_quantity} шт."
 
     def __repr__(self) -> str:
         return (f"Category(name='{self.name}', "
