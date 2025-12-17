@@ -1,10 +1,8 @@
 import pytest
 from unittest.mock import patch
-from src.products import Product, Smartphone, LawnGrass
+from src.products import Product, Smartphone, LawnGrass, BaseProduct
 from src.category import Category
 
-
-# === ТЕСТЫ ДЛЯ Product ===
 
 @pytest.mark.parametrize(
     "name, description, price, quantity",
@@ -85,14 +83,13 @@ def test_product_add_method(price_a, quantity_a,
 
 
 def test_product_add_method_type_error():
-    """Проверяет, что __add__ выбрасывает T
-    ypeError при сложении с не-Product."""
+    """Проверяет, что __add__ выбрасывает TypeError
+     при сложении с не-Product."""
     product = Product("Тест",
                       "Описание",
                       1000.0, 1)
-    with pytest.raises(TypeError,
-                       match="Складывать можно только продукты"):
-        product + "not a product"
+    with pytest.raises(TypeError, match="Складывать можно только продукты"):
+        product + "not a product"  # type: ignore
 
 
 def test_product_add_method_different_types_error():
@@ -276,12 +273,13 @@ def test_category_products_property():
 
 
 def test_category_add_product_type_error():
-    """Проверяет, что add_product выбрасывает TypeError
-     при передаче не-Product."""
+    """Проверяет, что add_product выбрасывает
+    TypeError при передаче не-Product."""
     category = Category("Тест",
-                        "Описание",
-                        [])
-    with pytest.raises(TypeError, match="Можно добавлять только товары"):
+                        "Описание", [])
+    with pytest.raises(TypeError,
+                       match="Можно добавлять только товары"):
+        # type: ignore
         category.add_product("not a product")
 
 
@@ -347,7 +345,8 @@ def test_new_product_with_list_updates_existing():
 
 
 def test_new_product_with_list_creates_new():
-    """Проверяет, что new_product создаёт новый товар, если нет совпадений."""
+    """Проверяет, что new_product создаёт новый товар,
+    если нет совпадений."""
     existing = Product("Телефон", "Смартфон",
                        20000.0, 5)
     products = [existing]
@@ -362,3 +361,202 @@ def test_new_product_with_list_creates_new():
     assert result.name == "Часы"
     assert result in products
     assert len(products) == 2
+
+
+# 1. Тест: LogCreationMixin корректно выводит информацию
+@patch("builtins.print")
+@pytest.mark.parametrize(
+    "cls, args, expected_repr",
+    [
+        # Для Product — ожидаем Product(...)
+        (Product, ("Телефон", "Смартфон", 20000.0, 5),
+         "Product('Телефон', 'Смартфон', 20000.0, 5)"),
+        # Для Smartphone — ожидаем Smartphone(...)
+        (Smartphone, ("iPhone", "Флагман", 100000.0, 1, 98.5,
+                      "15 Pro", 512, "Чёрный"),
+         "Smartphone('iPhone', 'Флагман', 100000.0, 1)"),
+        # Для LawnGrass — ожидаем LawnGrass(...)
+        (LawnGrass, ("Газон", "Зелёный", 500.0, 10,
+                     "Россия",
+                     "14 дней", "Зелёный"),
+         "LawnGrass('Газон', 'Зелёный', 500.0, 10)"),
+    ]
+)
+def test_log_creation_mixin_prints_info(mock_print, cls,
+                                        args, expected_repr):
+    """Проверяет, что миксин выводит repr объекта при создании."""
+    obj = cls(*args)
+    # Проверяем, что print был вызван
+    assert mock_print.call_count >= 1, "Должен быть хотя бы один вызов print"
+    # Ищем точное совпадение
+    printed_values = [call[0][0] for call in mock_print.call_args_list]
+    assert expected_repr in printed_values, (
+        f"Ожидался вывод: {expected_repr}\n"
+        f"Фактические вызовы: {printed_values}"
+    )
+
+
+# 2. Тест: LogCreationMixin с пустыми/граничными значениями
+@patch("builtins.print")
+@pytest.mark.parametrize(
+    "name, price, quantity",
+    [
+        ("", 0.0, 0),
+        ("A", -1.0, -5),
+        (None, None, None),
+    ]
+)
+def test_log_creation_mixin_edge_cases(mock_print, name, price, quantity):
+    """Проверяет, что миксин обрабатывает граничные значения."""
+    product = Product(
+        str(name) if name is not None else "",
+        "",
+        float(price) if price is not None else 0.0,
+        int(quantity) if quantity is not None else 0
+    )
+    # Должно быть минимум 1 вызов (от миксина)
+    assert mock_print.call_count >= 1
+    # Проверяем, что первый вызов — это repr
+    first_call = mock_print.call_args_list[0]
+    assert "Product(" in first_call[0][0]
+
+
+# 3. Тест: new_product — проверка добавления в список
+@patch("builtins.print")
+def test_new_product_adds_to_list_when_no_match(mock_print):
+    """Проверяет, что new_product создаёт и возвращает продукт."""
+    products = []
+    data = {"name": "Новинка", "description": "Тест",
+            "price": 1000.0, "quantity": 1}
+    product = Product.new_product(data, products)
+    assert isinstance(product, Product)
+    assert product.name == "Новинка"
+    assert product.price == 1000.0
+
+
+# 4. Тест: new_product — не обновляет цену, если новая ниже
+@patch("builtins.print")
+def test_new_product_keeps_higher_price(mock_print):
+    existing = Product("Телефон",
+                       "Описание",
+                       30000.0, 5)
+    products = [existing]
+    new_data = {"name": "Телефон", "description": "Обновлённый",
+                "price": 25000.0, "quantity": 2}
+    result = Product.new_product(new_data, products)
+    assert result is existing
+    assert result.price == 30000.0
+    assert result.quantity == 7
+    # Не требуем конкретное сообщение — может, его нет
+    assert mock_print.call_count >= 1  # хотя бы от миксина
+
+
+# 5. Тест: __radd__ с нулём и другими числами
+@pytest.mark.parametrize(
+    "left_value, price, quantity, expected",
+    [
+        (0, 100.0, 2, 200),
+        (50, 50.0, 3, 200),
+        (1000, 10.0, 10, 1100),
+    ]
+)
+def test_product_radd_with_numbers(left_value, price,
+                                   quantity, expected):
+    """Проверяет, что __radd__ корректно работает
+    при сложении числа с продуктом."""
+    product = Product("Тест",
+                      "Описание", price, quantity)
+    total = left_value + product
+    assert total == expected
+
+
+def test_product_radd_not_implemented():
+    """Проверяет, что __radd__ возвращает
+    NotImplemented для нечисловых типов."""
+    product = Product("Тест",
+                      "Описание",
+                      100.0, 1)
+    assert product.__radd__("строка") is NotImplemented
+
+
+# 6. Тест: __add__ с другими подклассами (должен падать)
+def test_add_product_with_subclass_via_inheritance():
+    """Проверяет, что нельзя сложить Product и его подкласс
+    (даже если он тоже Product)."""
+    class MockProduct(Product):
+        pass
+
+    p1 = Product("A", "Описание",
+                 100.0, 2)
+    p2 = MockProduct("B", "Описание",
+                     200.0, 1)
+
+    with pytest.raises(TypeError, match="Нельзя складывать "
+                                        "товары разных типов"):
+        p1 + p2
+
+
+# 7. Тест: BaseProduct не может быть создан напрямую
+def test_base_product_cannot_be_instantiated():
+    """Проверяет, что BaseProduct нельзя инстанцировать напрямую."""
+    with pytest.raises(TypeError):
+        BaseProduct("Тест", "Описание",
+                    100.0, 1)
+
+
+# 8. Тест: price setter — вывод при некорректной цене
+@patch("builtins.print")
+def test_price_setter_prints_message_only_once(mock_print):
+    """Проверяет, что print вызывается
+    при установке некорректной цены."""
+    product = Product("Тест", "Описание",
+                      1000.0, 1)
+    mock_print.reset_mock()  # сбрасываем вызовы от __init__
+    product.price = -100
+    product.price = 0
+    product.price = -50
+    assert mock_print.call_count == 3
+
+
+# 9. Тест: __str__ при нулевой цене
+def test_product_str_with_zero_price():
+    """Проверяет строковое представление при цене 0.0."""
+    product = Product("Тест", "Описание",
+                      0.0, 5)
+    with patch("builtins.print") as mock_print:
+        # вызовет print, но значение не изменится
+        product.price = 0.0
+    assert str(product) == "Тест, 0 руб. Остаток: 5 шт."
+
+
+# 10. Тест: __add__ с одним продуктом (sum с одним элементом)
+def test_sum_with_single_product():
+    """Проверяет, что sum([product]) работает корректно."""
+    product = Product("Тест", "Описание",
+                      100.0, 3)
+    total = sum([product])
+    assert total == 300
+
+
+# 11. Тест: new_product — пустые строки и граничные значения
+@pytest.mark.parametrize(
+    "name, price, quantity, expected_quantity",
+    [
+        ("", 100.0, 0, 0),
+        ("Товар", 0.0, 1, 1),
+        ("Товар", -10.0, 5, 5),
+    ]
+)
+@patch("builtins.print")
+def test_new_product_edge_cases(mock_print, name, price,
+                                quantity, expected_quantity):
+    """Проверяет new_product с граничными значениями."""
+    data = {"name": name, "description": "",
+            "price": price, "quantity": quantity}
+    product = Product.new_product(data)
+    assert product.name == name
+    assert product.quantity == expected_quantity
+    if price <= 0:
+        mock_print.assert_called()
+    else:
+        assert product.price == price

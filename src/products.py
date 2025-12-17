@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 
 # === Миксин для логирования создания объектов ===
@@ -21,7 +21,8 @@ class BaseProduct(ABC):
     Абстрактный базовый класс для всех продуктов.
     """
     @abstractmethod
-    def __init__(self, name: str, description: str, price: float, quantity: int) -> None:
+    def __init__(self, name: str, description: str,
+                 price: float, quantity: int) -> None:
         pass  # Реализация будет в наследниках
 
     @abstractmethod
@@ -43,7 +44,8 @@ class Product(LogCreationMixin, BaseProduct):
     """
     Класс, представляющий товар.
     """
-    def __init__(self, name: str, description: str, price: float, quantity: int) -> None:
+    def __init__(self, name: str, description: str,
+                 price: float, quantity: int) -> None:
         super().__init__(name, description, price, quantity)
         self.name = name
         self.description = description
@@ -63,7 +65,8 @@ class Product(LogCreationMixin, BaseProduct):
             self.__price = value
 
     def __str__(self) -> str:
-        return f"{self.name}, {int(self.price)} руб. Остаток: {self.quantity} шт."
+        return (f"{self.name}, {int(self.price)} руб. "
+                f"Остаток: {self.quantity} шт.")
 
     def __repr__(self) -> str:
         return (f"Product(name='{self.name}', "
@@ -100,9 +103,9 @@ class Product(LogCreationMixin, BaseProduct):
                             f"{type(self).__name__} и {type(other).__name__}")
         return (self.price * self.quantity) + (other.price * other.quantity)
 
-    def __radd__(self, other: float) -> float:
+    def __radd__(self, other: object) -> Union[float, NotImplemented]:
         if isinstance(other, (int, float)):
-            return other + (self.price * self.quantity)
+            return other + self.price * self.quantity
         return NotImplemented
 
 
