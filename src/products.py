@@ -1,12 +1,50 @@
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
 
-class Product:
+# === Миксин для логирования создания объектов ===
+class LogCreationMixin:
+    """
+    Миксин, который выводит в консоль информацию о создании объекта.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        class_name = self.__class__.__name__
+        args_repr = [repr(arg) for arg in args]
+        kwargs_repr = [f"{k}={repr(v)}" for k, v in kwargs.items()]
+        all_args = ", ".join(args_repr + kwargs_repr)
+        print(f"{class_name}({all_args})")
+
+
+class BaseProduct(ABC):
+    """
+    Абстрактный базовый класс для всех продуктов.
+    """
+    @abstractmethod
+    def __init__(self, name: str, description: str, price: float, quantity: int) -> None:
+        pass  # Реализация будет в наследниках
+
+    @abstractmethod
+    def __str__(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def price(self) -> float:
+        pass
+
+    @price.setter
+    @abstractmethod
+    def price(self, value: float) -> None:
+        pass
+
+
+class Product(LogCreationMixin, BaseProduct):
     """
     Класс, представляющий товар.
     """
-    def __init__(self, name: str, description: str,
-                 price: float, quantity: int) -> None:
+    def __init__(self, name: str, description: str, price: float, quantity: int) -> None:
+        super().__init__(name, description, price, quantity)
         self.name = name
         self.description = description
         self.quantity = quantity
@@ -25,8 +63,7 @@ class Product:
             self.__price = value
 
     def __str__(self) -> str:
-        return (f"{self.name}, {int(self.price)} руб. "
-                f"Остаток: {self.quantity} шт.")
+        return f"{self.name}, {int(self.price)} руб. Остаток: {self.quantity} шт."
 
     def __repr__(self) -> str:
         return (f"Product(name='{self.name}', "
@@ -73,20 +110,19 @@ class Smartphone(Product):
     """
     Класс смартфона.
     """
-
     def __init__(
         self,
         name: str,
         description: str,
         price: float,
         quantity: int,
-        efficiency: float | str,  # ← современный синтаксис | вместо Union
+        efficiency: float | str,
         model: str,
         memory: int,
         color: str,
     ) -> None:
         super().__init__(name, description, price, quantity)
-        self.efficiency = str(efficiency)  # всегда храним как строку
+        self.efficiency = str(efficiency)
         self.model = model
         self.memory = memory
         self.color = color
@@ -105,7 +141,6 @@ class LawnGrass(Product):
     """
     Класс газонной травы.
     """
-
     def __init__(
         self,
         name: str,
