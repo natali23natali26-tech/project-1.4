@@ -572,19 +572,20 @@ def test_product_init_raises_value_error_on_negative_quantity():
 
 
 def test_category_average_price_with_products():
-    """Проверяет, что average_price() корректно считает среднюю цену."""
+    """Проверяет, что middle_price() корректно считает среднюю цену."""
     p1 = Product("Телефон", "Смартфон", 20000.0, 3)
     p2 = Product("Наушники", "Беспроводные", 5000.0, 10)
     category = Category("Электроника", "Гаджеты", [p1, p2])
 
-    avg = category.average_price()
-    assert avg == 12500.0  # (20000 + 5000) / 2 = 12500
+    avg = category.middle_price()
+    # Взвешенная средняя: (20000*3 + 5000*10) / (3 + 10) = (60000 + 50000) / 13 = 110000 / 13 ≈ 8461.54
+    assert abs(avg - 8461.54) < 0.01
 
 
 def test_category_average_price_empty_category_returns_zero():
-    """Проверяет, что average_price() возвращает 0 для пустой категории."""
+    """Проверяет, что middle_price() возвращает 0 для пустой категории."""
     category = Category("Пусто", "Нет товаров", [])
-    avg = category.average_price()
+    avg = category.middle_price()
     assert avg == 0.0
 
 
