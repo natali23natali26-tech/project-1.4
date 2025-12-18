@@ -23,7 +23,7 @@ class BaseProduct(ABC):
     @abstractmethod
     def __init__(self, name: str, description: str,
                  price: float, quantity: int) -> None:
-        pass  # Реализация будет в наследниках
+        pass
 
     @abstractmethod
     def __str__(self) -> str:
@@ -46,6 +46,9 @@ class Product(LogCreationMixin, BaseProduct):
     """
     def __init__(self, name: str, description: str,
                  price: float, quantity: int) -> None:
+        if quantity <= 0:
+            raise ValueError("Товар с нулевым количеством "
+                             "не может быть добавлен")
         super().__init__(name, description, price, quantity)
         self.name = name
         self.description = description
@@ -103,7 +106,8 @@ class Product(LogCreationMixin, BaseProduct):
                             f"{type(self).__name__} и {type(other).__name__}")
         return (self.price * self.quantity) + (other.price * other.quantity)
 
-    def __radd__(self, other: object) -> Union[float, NotImplemented]:
+    def __radd__(self, other: object) -> Union[float,
+    NotImplemented]:
         if isinstance(other, (int, float)):
             return other + self.price * self.quantity
         return NotImplemented
@@ -124,6 +128,7 @@ class Smartphone(Product):
         memory: int,
         color: str,
     ) -> None:
+        # Проверка количества уже в Product.__init__
         super().__init__(name, description, price, quantity)
         self.efficiency = str(efficiency)
         self.model = model
@@ -154,6 +159,7 @@ class LawnGrass(Product):
         germination_period: str,
         color: str,
     ) -> None:
+        # Проверка количества уже в Product.__init__
         super().__init__(name, description, price, quantity)
         self.country = country
         self.germination_period = germination_period
