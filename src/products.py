@@ -46,10 +46,14 @@ class Product(LogCreationMixin, BaseProduct):
     """
     def __init__(self, name: str, description: str,
                  price: float, quantity: int) -> None:
-        if quantity <= 0:
-            raise ValueError("Товар с нулевым количеством "
-                             "не может быть добавлен")
+        # Сначала вызываем super() → срабатывает LogCreationMixin и печатает
         super().__init__(name, description, price, quantity)
+
+        # Теперь проверяем количество
+        if quantity <= 0:
+            raise ValueError("Товар с нулевым количеством не может быть добавлен")
+
+        # Остальные инициализации — как было
         self.name = name
         self.description = description
         self.quantity = quantity
@@ -72,8 +76,8 @@ class Product(LogCreationMixin, BaseProduct):
                 f"Остаток: {self.quantity} шт.")
 
     def __repr__(self) -> str:
-        return (f"Product(name='{self.name}', "
-                f"price={self.price}, quantity={self.quantity})")
+        # Исправлено: позиционные аргументы, как в тестах
+        return f"Product('{self.name}', '{self.description}', {self.price}, {self.quantity})"
 
     @classmethod
     def new_product(
@@ -106,8 +110,7 @@ class Product(LogCreationMixin, BaseProduct):
                             f"{type(self).__name__} и {type(other).__name__}")
         return (self.price * self.quantity) + (other.price * other.quantity)
 
-    def __radd__(self, other: object) -> Union[float,
-    NotImplemented]:
+    def __radd__(self, other: object) -> Union[float, NotImplemented]:
         if isinstance(other, (int, float)):
             return other + self.price * self.quantity
         return NotImplemented
@@ -128,7 +131,6 @@ class Smartphone(Product):
         memory: int,
         color: str,
     ) -> None:
-        # Проверка количества уже в Product.__init__
         super().__init__(name, description, price, quantity)
         self.efficiency = str(efficiency)
         self.model = model
@@ -136,13 +138,9 @@ class Smartphone(Product):
         self.color = color
 
     def __repr__(self) -> str:
-        return (f"Smartphone(name='{self.name}', "
-                f"price={self.price}, "
-                f"quantity={self.quantity}, "
-                f"efficiency='{self.efficiency}', "
-                f"model='{self.model}', "
-                f"memory={self.memory}, "
-                f"color='{self.color}')")
+        return (f"Smartphone('{self.name}', '{self.description}', "
+                f"{self.price}, {self.quantity}, '{self.efficiency}', "
+                f"'{self.model}', {self.memory}, '{self.color}')")
 
 
 class LawnGrass(Product):
@@ -159,16 +157,12 @@ class LawnGrass(Product):
         germination_period: str,
         color: str,
     ) -> None:
-        # Проверка количества уже в Product.__init__
         super().__init__(name, description, price, quantity)
         self.country = country
         self.germination_period = germination_period
         self.color = color
 
     def __repr__(self) -> str:
-        return (f"LawnGrass(name='{self.name}', "
-                f"price={self.price}, "
-                f"quantity={self.quantity}, "
-                f"country='{self.country}', "
-                f"germination_period='{self.germination_period}', "
-                f"color='{self.color}')")
+        return (f"LawnGrass('{self.name}', '{self.description}', "
+                f"{self.price}, {self.quantity}, '{self.country}', "
+                f"'{self.germination_period}', '{self.color}')")

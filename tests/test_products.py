@@ -10,18 +10,16 @@ from src.category import Category
         ("Телефон", "Смартфон", 20000.0, 10),
         ("Ноутбук", "Игровой", 80000.5, 5),
         ("", "Без названия", 1000.0, 1),
-        ("Камера", "", 30000.0, 0),
+        # ("Камера", "", 30000.0, 0),
     ]
 )
 def test_product_initialization(name, description, price, quantity):
     """Проверяет, что объект Product корректно инициализируется."""
     product = Product(name, description, price, quantity)
-
     assert product.name == name
     assert product.description == description
     assert product.price == price
     assert product.quantity == quantity
-
 
 @pytest.mark.parametrize(
     "initial_price, invalid_price",
@@ -59,8 +57,9 @@ def test_product_str_representation():
 def test_product_repr_representation():
     """Проверяет repr-представление продукта."""
     product = Product("Телефон", "Смартфон", 20000.0, 5)
-    expected = "Product(name='Телефон', price=20000.0, quantity=5)"
+    expected = "Product('Телефон', 'Смартфон', 20000.0, 5)"
     assert repr(product) == expected
+
 
 
 @pytest.mark.parametrize(
@@ -155,9 +154,7 @@ def test_smartphone_repr():
                        100000.0, 5,
                        98.5, "15 Pro",
                        512, "Чёрный")
-    expected = ("Smartphone(name='iPhone', price=100000.0, "
-                "quantity=5, efficiency='98.5', model='15 Pro', "
-                "memory=512, color='Чёрный')")
+    expected = "Smartphone('iPhone', 'Флагман', 100000.0, 5, '98.5', '15 Pro', 512, 'Чёрный')"
     assert repr(phone) == expected
 
 
@@ -191,13 +188,11 @@ def test_lawngrass_repr():
                       500.0, 10,
                       "Россия", "14 дней",
                       "Зелёный")
-    expected = ("LawnGrass(name='Газон', price=500.0, quantity=10, "
-                "country='Россия', germination_period='14 дней', "
-                "color='Зелёный')")
+    expected = "LawnGrass('Газон', 'Зелёный', 500.0, 10, 'Россия', '14 дней', 'Зелёный')"
     assert repr(grass) == expected
 
 
-# === ТЕСТЫ ДЛЯ Category ===
+# ТЕСТЫ ДЛЯ Category
 
 @pytest.mark.parametrize(
     "cat_name, cat_description, product_count_in_list",
@@ -283,7 +278,7 @@ def test_category_add_product_type_error():
         category.add_product("not a product")
 
 
-# === ТЕСТЫ СЧЁТЧИКОВ С ИСПОЛЬЗОВАНИЕМ patch ===
+# ТЕСТЫ СЧЁТЧИКОВ С ИСПОЛЬЗОВАНИЕМ patch
 
 @patch.multiple(Category, category_count=0, product_count=0)
 def test_category_and_product_count_incremented_correctly():
@@ -407,18 +402,21 @@ def test_log_creation_mixin_prints_info(mock_print, cls,
     ]
 )
 def test_log_creation_mixin_edge_cases(mock_print, name, price, quantity):
-    """Проверяет, что миксин обрабатывает граничные значения."""
-    product = Product(
-        str(name) if name is not None else "",
-        "",
-        float(price) if price is not None else 0.0,
-        int(quantity) if quantity is not None else 0
-    )
-    # Должно быть минимум 1 вызов (от миксина)
-    assert mock_print.call_count >= 1
-    # Проверяем, что первый вызов — это repr
-    first_call = mock_print.call_args_list[0]
-    assert "Product(" in first_call[0][0]
+    """Проверяет, что миксин выводит repr при создании, даже если потом будет ошибка."""
+    name_str = str(name) if name is not None else ""
+    price_float = float(price) if price is not None else 0.0
+    quantity_int = int(quantity) if quantity is not None else 0
+
+    # Ожидаем ValueError
+    with pytest.raises(ValueError, match="Товар с нулевым количеством не может быть добавлен"):
+        Product(name_str, "", price_float, quantity_int)
+
+    # Но print должен был вызваться ДО исключения
+    mock_print.assert_called()
+    printed = mock_print.call_args[0][0]
+    assert name_str in printed
+    assert str(price_float) in printed
+    assert str(quantity_int) in printed
 
 
 # 3. Тест: new_product — проверка добавления в список
@@ -542,17 +540,14 @@ def test_sum_with_single_product():
 @pytest.mark.parametrize(
     "name, price, quantity, expected_quantity",
     [
-        ("", 100.0, 0, 0),
+        ("", 100.0, 1, 1),
         ("Товар", 0.0, 1, 1),
         ("Товар", -10.0, 5, 5),
     ]
 )
 @patch("builtins.print")
-def test_new_product_edge_cases(mock_print, name, price,
-                                quantity, expected_quantity):
-    """Проверяет new_product с граничными значениями."""
-    data = {"name": name, "description": "",
-            "price": price, "quantity": quantity}
+def test_new_product_edge_cases(mock_print, name, price, quantity, expected_quantity):
+    data = {"name": name, "description": "", "price": price, "quantity": quantity}
     product = Product.new_product(data)
     assert product.name == name
     assert product.quantity == expected_quantity
@@ -560,3 +555,47 @@ def test_new_product_edge_cases(mock_print, name, price,
         mock_print.assert_called()
     else:
         assert product.price == price
+
+
+
+def test_product_init_raises_value_error_on_zero_quantity():
+    """Проверяет, что при создании товара с нулевым количеством
+    выбрасывается ValueError с нужным сообщением."""
+    with pytest.raises(ValueError, match="Товар с нулевым количеством не может быть добавлен"):
+        Product("Тест", "Описание", 1000.0, 0)
+
+
+def test_product_init_raises_value_error_on_negative_quantity():
+    """Проверяет, что при отрицательном количестве тоже выбрасывается ValueError."""
+    with pytest.raises(ValueError, match="Товар с нулевым количеством не может быть добавлен"):
+        Product("Тест", "Описание", 1000.0, -5)
+
+
+def test_category_average_price_with_products():
+    """Проверяет, что average_price() корректно считает среднюю цену."""
+    p1 = Product("Телефон", "Смартфон", 20000.0, 3)
+    p2 = Product("Наушники", "Беспроводные", 5000.0, 10)
+    category = Category("Электроника", "Гаджеты", [p1, p2])
+
+    avg = category.average_price()
+    assert avg == 12500.0  # (20000 + 5000) / 2 = 12500
+
+
+def test_category_average_price_empty_category_returns_zero():
+    """Проверяет, что average_price() возвращает 0 для пустой категории."""
+    category = Category("Пусто", "Нет товаров", [])
+    avg = category.average_price()
+    assert avg == 0.0
+
+
+@patch("builtins.print")
+def test_log_creation_mixin_prints_before_value_error(mock_print):
+    """Проверяет, что миксин выводит repr ДО выброса ValueError."""
+    with pytest.raises(ValueError, match="Товар с нулевым количеством не может быть добавлен"):
+        Product("Тест", "Описание", 1000.0, 0)
+
+    # Проверяем, что print был вызван
+    mock_print.assert_called()
+    printed = mock_print.call_args[0][0]
+    assert "Product('Тест', 'Описание', 1000.0, 0)" in printed
+
