@@ -42,14 +42,10 @@ class Category:
 
     def middle_price(self) -> float:
         """
-        Возвращает среднюю цену товаров в категории.
-        Средняя цена — взвешенная по количеству товаров.
+        Возвращает среднюю цену товаров в категории как среднее арифметическое.
         Если товаров нет — возвращает 0.0.
         """
         if not self.__products:
             return 0.0
-        total_cost = sum(product.price * product.quantity for product in self.__products)
-        total_quantity = sum(product.quantity for product in self.__products)
-        if total_quantity == 0:
-            return 0.0
-        return total_cost / total_quantity
+        total_price = sum(product.price for product in self.__products)
+        return total_price / len(self.__products)

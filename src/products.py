@@ -51,7 +51,8 @@ class Product(LogCreationMixin, BaseProduct):
 
         # Теперь проверяем количество
         if quantity <= 0:
-            raise ValueError("Товар с нулевым количеством не может быть добавлен")
+            raise ValueError("Товар с нулевым количеством"
+                             " не может быть добавлен")
 
         # Остальные инициализации — как было
         self.name = name
@@ -77,7 +78,9 @@ class Product(LogCreationMixin, BaseProduct):
 
     def __repr__(self) -> str:
         # Исправлено: позиционные аргументы, как в тестах
-        return f"Product('{self.name}', '{self.description}', {self.price}, {self.quantity})"
+        return (f"Product('{self.name}', "
+                f"'{self.description}', "
+                f"{self.price}, {self.quantity})")
 
     @classmethod
     def new_product(
